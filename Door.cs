@@ -8,12 +8,15 @@ public class Door : MonoBehaviour
     // Set position when going through doors
 
     // Vertical Directions
-    private static Vector3 outsideToBar = new Vector3(0f, 0.5f, -0.95f);
+    private static Vector3 insideBuilding = new Vector3(0f, 0.5f, -0.95f);
+    private static Vector3 insideMansion = new Vector3(0f, 0.5f, -2f);
+
+
     private static Vector3 barToOutside = new Vector3(0f, 0.5f, 5.3f);
-    private static Vector3 storeOutsideToStore = new Vector3(0f, 0.5f, -0.95f);
-    private static Vector3 storeToStoreOutside = new Vector3(2.5f, 0.5f, 7.7f);
+    private static Vector3 storeToStoreOutside = new Vector3(2.5f, 0.5f, 7.8f);
     private static Vector3 mansionOutsideToOutside = new Vector3(0f, 0.5f, -3.5f);
     private static Vector3 outsideToMansionOutside = new Vector3(0f, 0.5f, 24f);
+    private static Vector3 mansionDownstairsToMansionOutside = new Vector3(6.8f, 0.5f, -1.8f);
 
 
     // Horizontal Directions
@@ -22,7 +25,14 @@ public class Door : MonoBehaviour
     private static Vector3 outsideToBeach = new Vector3(5.5f, 0.5f, 1f);
     private static Vector3 beachToOutside = new Vector3(-5.5f, 0.5f, 1f);
 
-    public static int costume;
+    //public static int costume;
+    private static Door instance;
+    private static bool doorSoundNeeded;
+
+    private void Start()
+    {
+        instance = this;
+    }
 
     public static void GoToScene(string location)
     {
@@ -30,12 +40,32 @@ public class Door : MonoBehaviour
         switch (location)
         {
             case "Bar":
-                CharacterMovement.setPos = outsideToBar;
+            case "Store":
+                CharacterMovement.setPos = insideBuilding;
+                doorSoundNeeded = true;
+                instance.StartCoroutine("WaitForDoorSound", location);
+                break;
+            case "Mansion_Downstairs":
+            case "Mansion_Upstairs":
+                if (SceneManager.GetActiveScene().name == "Mansion_Upstairs")
+                {
+                    CharacterMovement.setPos = new Vector3(0f, 0.5f, 6.5f);
+                }
+                else
+                {
+                    CharacterMovement.setPos = insideMansion;
+                    if (SceneManager.GetActiveScene().name == "Mansion_Outside") {
+                        doorSoundNeeded = true;
+                        instance.StartCoroutine("WaitForDoorSound", location);
+                    }
+                }
                 break;
             case "Outside":
                 if (SceneManager.GetActiveScene().name == "Bar")
                 {
                     CharacterMovement.setPos = barToOutside;
+                    doorSoundNeeded = true;
+                    instance.StartCoroutine("WaitForDoorSound", location);
                 }
                 else if(SceneManager.GetActiveScene().name == "Store_Outside")
                 {
@@ -58,26 +88,47 @@ public class Door : MonoBehaviour
                 else
                 {
                     CharacterMovement.setPos = storeToStoreOutside;
+                    doorSoundNeeded = true;
+                    instance.StartCoroutine("WaitForDoorSound", location);
                 }
-                break;
-            case "Store":
-                CharacterMovement.setPos = storeOutsideToStore;
                 break;
             case "Beach":
                 CharacterMovement.setPos = outsideToBeach;
                 break;
             case "Mansion_Outside":
-                CharacterMovement.setPos = outsideToMansionOutside;
+                if (SceneManager.GetActiveScene().name == "Outside")
+                {
+                    CharacterMovement.setPos = outsideToMansionOutside;
+                }
+                else if (SceneManager.GetActiveScene().name == "Mansion_Downstairs")
+                {
+                    CharacterMovement.setPos = mansionDownstairsToMansionOutside;
+                    doorSoundNeeded = true;
+                    instance.StartCoroutine("WaitForDoorSound", location);
+                }
                 break;
         }
-        SceneManager.LoadScene(location);
+        if (!doorSoundNeeded) {
+            SceneManager.LoadScene(location);
+        }
     }
 
     public static void GoBattle(string enemyType, string scene)
     {
+        // Go back to previous position after battle ends
         CharacterMovement.setPos = CharacterMovement.currPos;
+
         BattleManager.SetEnemy(enemyType);
-        BattleManager.SetScene(scene);
-        //SceneManager.LoadScene("Battle");
+        GameManager.SetScene(scene);
+    }
+
+    IEnumerator WaitForDoorSound(string location)
+    {
+        Interactables.StopPlayer();
+        SoundEffectsOverworld.PlayGoThroughDoor();
+        yield return new WaitForSeconds(0.75f);
+        Interactables.StartPlayer();
+        doorSoundNeeded = false;
+        SceneManager.LoadScene(location);
     }
 }

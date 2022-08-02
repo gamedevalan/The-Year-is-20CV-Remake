@@ -70,7 +70,7 @@ public class ShowSign : MonoBehaviour
 
     IEnumerator HideCamera()
     {
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(2f);
         currCamera.SetActive(false);
         mainCamera.SetActive(true);
         player.SetActive(true);

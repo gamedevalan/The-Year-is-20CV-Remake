@@ -6,6 +6,7 @@ public class PickupItem : MonoBehaviour
 {
     public bool pickedUp;
     public int uniqueKey;
+    public bool keyItem;
 
     private void Awake()
     {
@@ -32,5 +33,14 @@ public class PickupItem : MonoBehaviour
         this.GetComponent<Rigidbody>().detectCollisions = false;
         this.transform.parent.GetComponent<SpriteRenderer>().enabled = false;
         GameManager.itemsInGame[uniqueKey] = true;
+        if (keyItem)
+        {
+            KeyitemFound();
+        }
+    }
+
+    private void KeyitemFound()
+    {
+        GameManager.OpenNewEnvironment();
     }
 }

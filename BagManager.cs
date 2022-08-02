@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class BagManager : MonoBehaviour
 {
@@ -18,6 +19,11 @@ public class BagManager : MonoBehaviour
     public GameObject statSummary;
     public GameObject taiButton;
     public GameObject annaButton;
+
+    private int healthBoost = 10;
+    private int attackBoost = 10;
+    private int defenseBoost = 10;
+    private float critDamageBoost = 0.15f;
 
     public Text title;
 
@@ -59,22 +65,23 @@ public class BagManager : MonoBehaviour
 
     public void TaiChoseToChange()
     {
+        SoundEffectsOverworld.PlayDrinkSound();
         if (stat.Equals("Health Bottle"))
         {
-            CharacterMovement.taiHealth += 10;
+            CharacterMovement.taiHealth += healthBoost;
         }
         else if (stat.Equals("Attack Bottle"))
         {
-            CharacterMovement.taiAttack += 5;
+            CharacterMovement.taiAttack += attackBoost;
         }
         else if (stat.Equals("Defense Bottle"))
         {
-            CharacterMovement.taiDefense += 10;
+            CharacterMovement.taiDefense += defenseBoost;
         }
 
         else if (stat.Equals("Crit Damage Bottle"))
         {
-            CharacterMovement.taiCritDamMultiplier += .15f;
+            CharacterMovement.taiCritDamMultiplier += critDamageBoost;
         }
         instance.taiButton.SetActive(false);
         instance.annaButton.SetActive(false);
@@ -83,22 +90,23 @@ public class BagManager : MonoBehaviour
 
     public void AnnaChoseToChange()
     {
+        SoundEffectsOverworld.PlayDrinkSound();
         if (stat.Equals("Health Bottle"))
         {
-            CharacterMovement.annaHealth += 10;
+            CharacterMovement.annaHealth += healthBoost;
         }
         else if (stat.Equals("Attack Bottle"))
         {
-            CharacterMovement.annaAttack += 5;
+            CharacterMovement.annaAttack += attackBoost;
         }
         else if (stat.Equals("Defense Bottle"))
         {
-            CharacterMovement.annaDefense += 10;
+            CharacterMovement.annaDefense += defenseBoost;
         }
 
         else if (stat.Equals("Crit Damage Bottle"))
         {
-            CharacterMovement.annaCritDamMultiplier += .15f;
+            CharacterMovement.annaCritDamMultiplier += critDamageBoost;
         }
         instance.taiButton.SetActive(false);
         instance.annaButton.SetActive(false);
@@ -113,7 +121,7 @@ public class BagManager : MonoBehaviour
         instance.taiButton.SetActive(true);
         instance.annaButton.SetActive(true);
         instance.exitSummaryButton.SetActive(false);
-        ShowSummary("Who would you like to give this too?");
+        ShowSummary("Who would you like to give the "+ ItemUsageManager.nameOfBottle +" to?");
     }
 
     // Shows the Summary panel but not the buttons.
@@ -146,5 +154,12 @@ public class BagManager : MonoBehaviour
     public void ExitSummary()
     {
         instance.statSummary.SetActive(false);
+    }
+
+    public void Menu()
+    {
+        CharacterMovement.setPos = CharacterMovement.currPos;
+        GameManager.SetScene(SceneManager.GetActiveScene().name);
+        SceneManager.LoadScene("Menu");
     }
 }

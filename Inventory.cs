@@ -12,7 +12,7 @@ public class Inventory : MonoBehaviour
     public GameObject[] slots;
     public GameObject[] itemPrefabs;
 
-    private readonly static float defaultMoney = 500;
+    private readonly static float defaultMoney = 100;
     public static float currMoney = defaultMoney;
     public Text inspectorMoneyInBag;
     private static Text moneyInBag;
@@ -26,7 +26,6 @@ public class Inventory : MonoBehaviour
 
     private void Start()
     {
-        //currMoney = defaultMoney;
         moneyInBag = inspectorMoneyInBag;
     }
 
@@ -56,10 +55,9 @@ public class Inventory : MonoBehaviour
         }
     }
 
-    // Maybe make cleaner?
     public static void ShowInventory()
     {
-        if (currMoney < 999999999)
+        if (currMoney <= 999999999)
         {
             moneyInBag.text = "$" + currMoney;
         }
@@ -89,18 +87,23 @@ public class Inventory : MonoBehaviour
                                 if (instance.slots[i].gameObject.transform.childCount < 1)
                                 {
                                     currItem = instance.itemPrefabs[j];
-                                    currItem.transform.GetChild(0).GetComponent<Text>().text = "X" + item.Value;
+                                    if (currItem.transform.childCount != 0)
+                                    {
+                                        currItem.transform.GetChild(0).GetComponent<Text>().text = "X" + item.Value;
+                                    }
                                     Instantiate(currItem, instance.slots[i].gameObject.transform, false);
                                 }
                                 else
                                 {
                                     // Update number of a certain item
-                                    instance.slots[i].transform.GetChild(0).GetChild(0).GetComponent<Text>().text = "X" + item.Value; ;
+                                    if (instance.slots[i].transform.GetChild(0).childCount != 0)
+                                    {
+                                        instance.slots[i].transform.GetChild(0).GetChild(0).GetComponent<Text>().text = "X" + item.Value;
+                                    }
                                 }
                                 break;
                             }
                         }
-                        //instance.PutItemInSlot(item, i);
                         break;
                     }
                 }
@@ -114,7 +117,6 @@ public class Inventory : MonoBehaviour
         for (int i = 0; i < instance.isFull.Length; i++)
         {
             instance.isFull[i] = false;
-            // Maybe Bad idea but also good
             if (instance.slots[i].transform.childCount > 0)
             {
                 Destroy(instance.slots[i].transform.GetChild(0).gameObject);
@@ -122,20 +124,16 @@ public class Inventory : MonoBehaviour
         }
     }
 
-    //private void PutItemInSlot(KeyValuePair<string, int> item, int i)
-    //{
-    //    GameObject currItem;
-    //    // Find the correct prefab item.
-    //    for (int j = 0; j < instance.itemPrefabs.Length; j++)
-    //    {
-    //        if (instance.itemPrefabs[j].name.Equals(item.Key))
-    //        {
-    //            currItem = instance.itemPrefabs[j];
-    //            Instantiate(currItem, instance.slots[i].gameObject.transform, false);
-    //            currItem.transform.GetChild(0).GetComponent<Text>().text = "X" + item.Value;
-    //            break;
-    //        }
-    //    }
-    //}
-
+    public static void ChangeMoney(int money)
+    {
+        currMoney += money;
+        if (currMoney > 999999999)
+        {
+            currMoney = 999999999;
+        }
+        if (currMoney < 0)
+        {
+            currMoney = 0;
+        }
+    }
 }

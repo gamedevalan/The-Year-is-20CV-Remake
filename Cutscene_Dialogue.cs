@@ -4,44 +4,21 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class Dialogue : MonoBehaviour
+public class Cutscene_Dialogue : MonoBehaviour
 {
     public Text textDisplay;
     public string[] sentences;
     public int index;
     private float typingSpeed = 0.0001f;
     public GameObject[] whosTalking;
-    public GameObject cutScenes;
-
-
     public GameObject nextButton;
-    public GameObject skipButton;
-
-    public GameObject pressSpacePrompt;
-    public GameObject player;
 
     private void OnEnable()
     {
-        if (Interactables.bossDialogue)
-        {
-            skipButton.SetActive(true);
-        }
-        if (BagManager.bag != null)
-        {
-            BagManager.HideBagIcon();
-        }
-        if (pressSpacePrompt != null)
-        {
-            pressSpacePrompt.SetActive(false);
-        }
-        Interactables.StopPlayer();
         textDisplay.text = "";
         nextButton.SetActive(false);
-        if (cutScenes != null)
-        {
-            cutScenes.SetActive(true);
-            ShowDialogueSprites();
-        }
+
+        ShowDialogueSprites();
         StartCoroutine(Type());
     }
 
@@ -50,13 +27,14 @@ public class Dialogue : MonoBehaviour
         // Only show next button once current paragraph finishes.
         if (textDisplay.text == sentences[index])
         {
-            //if (Input.GetKey(KeyCode.Space))
-            //{
-            //    nextButton.SetActive(false);
-            //    NextSentence();
-            //}
             nextButton.SetActive(true);
         }
+    }
+
+    IEnumerator PauseBeforeNext()
+    {
+        yield return new WaitForSeconds(5f);
+        NextSentence();
     }
 
     IEnumerator Type()
@@ -75,34 +53,27 @@ public class Dialogue : MonoBehaviour
         nextButton.SetActive(false);
         if (index < sentences.Length - 1)
         {
+            nextButton.SetActive(false);
             index++;
             textDisplay.text = "";
-            if (cutScenes != null) {
-                ShowDialogueSprites();
-            }
+
+            ShowDialogueSprites();
+            
             StartCoroutine(Type());
         }
         else
         {
-            if (BagManager.bag != null)
-            {
-                BagManager.ShowBagIcon();
-            }
-            if (pressSpacePrompt != true)
-            {
-                pressSpacePrompt.SetActive(true);
-            }
-            Interactables.StartPlayer();
             index = 0;
             textDisplay.text = "";
-            transform.gameObject.SetActive(false);
-            if (Interactables.bossDialogue)
+            if (SceneManager.GetActiveScene().name == "Start Scene")
             {
-                Door.GoBattle(Interactables.currBoss, SceneManager.GetActiveScene().name);
+                SceneManager.LoadScene("Bar");
             }
             else
             {
-                cutScenes.SetActive(false);
+                GameManager.OpenNewEnvironment();
+                Menu.endingScreenShow = true;
+                SceneManager.LoadScene("End");
             }
         }
     }
@@ -118,10 +89,5 @@ public class Dialogue : MonoBehaviour
                 whosTalking[i].SetActive(false);
             }
         }
-    }
-
-    public void SkipDialogue()
-    {
-        Door.GoBattle(Interactables.currBoss, SceneManager.GetActiveScene().name);
     }
 }

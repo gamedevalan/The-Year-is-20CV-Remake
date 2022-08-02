@@ -3,13 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+using UnityEngine.SceneManagement;
+
+
 public class CharacterMovement : MonoBehaviour
 {
-    readonly float moveSpeed = 5f;
+    readonly float moveSpeed = 90f;
     bool faceLeft = true;
-    string facingDirection = "left";
+    private static string facingDirection = "left";
     private GameObject character;
     private Animator animator;
+
+    public Rigidbody rb;
 
     // Animations for player
     public Animator taiAnimation;
@@ -20,9 +25,13 @@ public class CharacterMovement : MonoBehaviour
     public GameObject anna;
     public int num;
 
+    Color mansionRoom; //8E6767;
+    Color bar; //FFBF91c
+    Color outside; //A9A9A9
+
     // Imported sprites are different sizes, so treat them differently
-    private Vector3 taiScale;
-    private Vector3 annaScale;
+    private readonly float taiScale = 0.7f;
+    private readonly float annaScale = 0.9f;
 
     // Attach prompt canvas
     public GameObject interactPrompt;
@@ -48,45 +57,69 @@ public class CharacterMovement : MonoBehaviour
     public static bool healCharmBought;
 
     // Starting position when game starts
-    public static Vector3 setPos= new Vector3(0.07f, 0.5f, 1.5f);
+    public static Vector3 setPos = new Vector3(-3f, 0.5f, 2.4f);
 
+    private void Awake()
+    {
+        ColorUtility.TryParseHtmlString("#8E6767", out mansionRoom);
+        ColorUtility.TryParseHtmlString("#FFBF91", out bar);
+        ColorUtility.TryParseHtmlString("#A9A9A9", out outside);
+    }
     private void Start()
     {
+        rb = GetComponent<Rigidbody>();
+
         transform.position = setPos;
+        num = GameManager.costume;
+
         interactPrompt.SetActive(false);
-        taiScale = new Vector3(tai.transform.localScale.x, tai.transform.localScale.y, tai.transform.localScale.z);
-        annaScale = new Vector3(anna.transform.localScale.x, anna.transform.localScale.y, anna.transform.localScale.z);
         taiAnimation.keepAnimatorControllerStateOnDisable = true;
         annaAnimation.keepAnimatorControllerStateOnDisable = true;
-        character = tai;
-        num = Door.costume;
+        if (num == 0)
+        {
+            character = tai;
+            animator = taiAnimation;
+        }
+        else
+        {
+            character = anna;
+            animator = annaAnimation;
+        }
+
+        if (SceneManager.GetActiveScene().name.IndexOf("stairs") != -1)
+        {
+            tai.GetComponent<Renderer>().material.color = mansionRoom;
+            anna.GetComponent<Renderer>().material.color = mansionRoom;
+        }
+        else if (SceneManager.GetActiveScene().name == "Bar")
+        {
+            tai.GetComponent<Renderer>().material.color = bar;
+            anna.GetComponent<Renderer>().material.color = bar;
+        }
+        else if (SceneManager.GetActiveScene().name.IndexOf("Outside") != -1)
+        {
+            tai.GetComponent<Renderer>().material.color = outside;
+            anna.GetComponent<Renderer>().material.color = outside;
+        }
+        else
+        {
+            tai.GetComponent<Renderer>().material.color = Color.white;
+            anna.GetComponent<Renderer>().material.color = Color.white;
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        Movement();
     }
 
     // Update is called once per frame
     void Update()
     {
         currPos = new Vector3(transform.position.x, transform.position.y, transform.position.z);
-        Door.costume = num;
+        GameManager.costume = num;
         ChangeCharacters();
-        Movement();
         FaceDirection();
-
-        // Delete Later
-        if (Input.GetKey(KeyCode.P))
-        {
-            Debug.Log("TAI STATS:");
-            Debug.Log("Health: "+taiHealth);
-            Debug.Log("Attack: " + taiAttack);
-            Debug.Log("Defense: " + taiDefense);
-            Debug.Log("CD M: " + taiCritDamMultiplier);
-            Debug.Log("Charm Bought: "+ critRateCharmBought);
-            Debug.Log("ANNA STATS:");
-            Debug.Log("Health: " + annaHealth);
-            Debug.Log("Attack: " + annaAttack);
-            Debug.Log("Defense: " + annaDefense);
-            Debug.Log("CD M: " + annaCritDamMultiplier);
-            Debug.Log("Charm Bought: " + critRateCharmBought);
-        }
     }
 
     // Change appearance of player based on input
@@ -111,55 +144,59 @@ public class CharacterMovement : MonoBehaviour
         {
             if (num != 0) {
                 num = 0;
+                float temp = character.transform.localScale.x / Mathf.Abs(character.transform.localScale.x);
                 character = tai;
-                ResetLookingDirection(taiScale);
+                ResetLookingDirection(character, temp, taiScale);
             }
         }
         if (Input.GetKey(KeyCode.S))
         {
             if (num != 1) {
                 num = 1;
+                float temp = character.transform.localScale.x / Mathf.Abs(character.transform.localScale.x);
                 character = anna;
-                ResetLookingDirection(annaScale);
+                ResetLookingDirection(character, temp, annaScale);
             }
         }
     }
 
-    private void ResetLookingDirection(Vector3 scale)
+    // Keep the same facing direction
+    private void ResetLookingDirection(GameObject character, float num, float scale)
     {
-        character.transform.localScale = scale;
-        faceLeft = true;
-        facingDirection = "left";
+        character.transform.localScale = new Vector3(scale * num, scale, scale);
     }
 
     private void Movement()
     {
         if (Input.GetKey(KeyCode.RightArrow))
         {
-            transform.Translate(Vector3.right * moveSpeed * Time.deltaTime);
+            rb.AddForce(transform.right * moveSpeed);
             facingDirection = "right";
             animator.SetFloat("Speed", 1);
         }
         else if (Input.GetKey(KeyCode.LeftArrow))
         {
-            transform.Translate(Vector3.left * moveSpeed * Time.deltaTime);
+            rb.AddForce(-transform.right * moveSpeed);
             facingDirection = "left";
             animator.SetFloat("Speed", 1);
         }
         else if (Input.GetKey(KeyCode.UpArrow))
         {
-            transform.Translate(0,0, moveSpeed * Time.deltaTime);
+            rb.AddForce(transform.forward * moveSpeed);
             animator.SetFloat("Speed", 1);
         }
         else if (Input.GetKey(KeyCode.DownArrow))
         {
-            transform.Translate(0,0 ,-moveSpeed * Time.deltaTime);
+            rb.AddForce(-transform.forward * moveSpeed);
             animator.SetFloat("Speed", 1);
         }
         else
         {
             // Set back to idle animation
-            animator.SetFloat("Speed", 0);
+            if ((animator != null && animator.isActiveAndEnabled))
+            {
+                animator.SetFloat("Speed", 0);
+            }
         }
     }
 
@@ -170,11 +207,11 @@ public class CharacterMovement : MonoBehaviour
             faceLeft = !faceLeft;
             if (num == 0)
             {
-                character.transform.localScale = new Vector3(-taiScale.x, taiScale.y, taiScale.z);
+                character.transform.localScale = new Vector3(-taiScale, taiScale, taiScale);
             }
             else
             {
-                character.transform.localScale = new Vector3(-annaScale.x, annaScale.y, annaScale.z);
+                character.transform.localScale = new Vector3(-annaScale, annaScale, annaScale);
             }
         }
 
@@ -183,11 +220,11 @@ public class CharacterMovement : MonoBehaviour
             faceLeft = !faceLeft;
             if (num == 0)
             {
-                character.transform.localScale = new Vector3(taiScale.x, taiScale.y, taiScale.z);
+                character.transform.localScale = new Vector3(taiScale, taiScale, taiScale);
             }
             else
             {
-                character.transform.localScale = new Vector3(annaScale.x, annaScale.y, annaScale.z);
+                character.transform.localScale = new Vector3(annaScale, annaScale, annaScale);
             }
         }
     }
@@ -197,6 +234,7 @@ public class CharacterMovement : MonoBehaviour
     {
         interactPrompt.SetActive(true);
         prompt.text = "Press Space";
+        prompt.fontSize = 30;
         switch (other.gameObject.tag)
         {
             case "SignL":
@@ -213,23 +251,29 @@ public class CharacterMovement : MonoBehaviour
                 }
                 break;
             case "Bottle":
+            case "KeyItem":
+                prompt.text += " to pick up";
+                prompt.fontSize = 25;
                 if (Input.GetKey(KeyCode.Space))
                 {
                     Interactables.ShowDialogue(other.gameObject.tag, other.name);
                     other.gameObject.GetComponent<PickupItem>().SetPickedUp();
-                    //Destroy(other.transform.parent.gameObject);
                     interactPrompt.SetActive(false);
                 }
                 break;
-            case "Virus-SM":
-            case "Bat":
+            case "Enemy":
                 if (Input.GetKey(KeyCode.Space))
                 {
-                    Interactables.ShowDialogue(other.gameObject.tag, null);
-                    Destroy(other.transform.gameObject);
+                    Interactables.ShowDialogue(other.gameObject.name, null);
                 }
                 break;
             case "Shop":
+                if (Input.GetKey(KeyCode.Space))
+                {
+                    Interactables.ShowDialogue(other.gameObject.tag, null);
+                }
+                break;
+            case "End":
                 if (Input.GetKey(KeyCode.Space))
                 {
                     Interactables.ShowDialogue(other.gameObject.tag, null);
@@ -256,78 +300,4 @@ public class CharacterMovement : MonoBehaviour
         taiHealth += 10;
         annaHealth += 10;
     }
-
-
 }
-
-
-/*
- 
-      private void ChangeCharacters()
-    {
-        if (num == 0)
-        {
-            tai.SetActive(true);
-            anna.SetActive(false);
-            animator = taiAnimation;
-        }
-        else
-        {
-            tai.SetActive(false);
-            anna.SetActive(true);
-            animator = annaAnimation;
-        }
-
-        if (Input.GetKey(KeyCode.A))
-        {
-            if (num != 0) {
-                num = 0;
-                //character = tai;
-                ResetLookingDirection(character.transform.localScale.x);
-            }
-        }
-        if (Input.GetKey(KeyCode.S))
-        {
-            if (num != 1) {
-                num = 1;
-                //character = anna;
-                ResetLookingDirection(character.transform.localScale.x);
-            }
-        }
-    }
-
-    private void ResetLookingDirection(float scale)
-    {
-        Debug.Log(character);
-        if (scale < 0)
-        {
-            if (num == 0)
-            {
-                character = tai;
-            }
-            else
-            {
-                character = anna;
-            }
-            Debug.Log("Scale is negative"+character);
-            character.transform.localScale = new Vector3(-character.transform.localScale.x, character.transform.localScale.y, character.transform.localScale.z);
-
-        }
-        else
-        {
-            if (num == 0)
-            {
-                character = tai;
-            }
-            else
-            {
-                character = anna;
-            }
-            Debug.Log("Scale is positive" + character);
-            character.transform.localScale = new Vector3(character.transform.localScale.x, character.transform.localScale.y, character.transform.localScale.z);
-        }
-        //character.transform.localScale = scale;
-        //faceLeft = true;
-        //facingDirection = "left";
-    }
-     */
