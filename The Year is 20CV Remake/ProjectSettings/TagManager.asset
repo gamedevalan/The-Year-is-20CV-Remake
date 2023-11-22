@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - Chair
+  - Bottle
+  - Outside
+  - Bar
+  - Store_Outside
+  - SignD
+  - SignL
+  - Store
+  - Beach
+  - Mansion
+  - Mansion_Outside
+  - Shop
+  - Mansion_Downstairs
+  - Mansion_Upstairs
+  - Karen
+  - KeyItem
+  - Enemy
+  - Virus-SM
+  - End
+  - Health
+  - Attack
+  - Defense
+  - Crit Damage
+  - Crit Rate
+  - Heal
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - 
+  - 
+  - Tiz
+  - Agnes
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: 2
+    uniqueID: 1873619643
+    locked: 0
